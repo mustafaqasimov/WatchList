@@ -1,0 +1,17 @@
+spring:
+  liquibase:
+    clear-checksums: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5432/watchlist_db
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  

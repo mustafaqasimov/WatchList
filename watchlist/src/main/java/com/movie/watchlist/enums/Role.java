@@ -1,0 +1,6 @@
+package com.movie.watchlist.enums;
+
+public enum Role {
+    ROLE_USER,
+    ROLE_ADMIN
+}

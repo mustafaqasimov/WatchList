@@ -25,7 +25,7 @@ public class BaseEntity {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "active" , nullable = false)
     ActiveStatus activeStatus =  ActiveStatus.ACTIVE;
 
     @CreationTimestamp

@@ -14,6 +14,5 @@ public class UserResponseDto {
     Long id;
     String username;
     String email;
-    String password;
     ActiveStatus activeStatus;
 }

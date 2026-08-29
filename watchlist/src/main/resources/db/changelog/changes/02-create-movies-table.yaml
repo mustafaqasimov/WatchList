@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-create-movies-table
+      author: mustafaqasimov
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: movies
+
+      changes:
+        - createTable:
+            tableName: movies
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: VARCHAR(1000)
+
+              - column:
+                  name: release_date
+                  type: DATE
+
+              - column:
+                  name: rating
+                  type: DOUBLE PRECISION
+
+              - column:
+                  name: genre
+                  type: VARCHAR(50)
+
+              - column:
+                  name: active
+                  type: VARCHAR(10)
+                  defaultValue: 'ACTIVE'
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP

@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 05-add-tmdbid-and-posterpath-to-movies
+      author: mustafaqasimov
+      changes:
+        - addColumn:
+            tableName: movies
+            columns:
+              - column:
+                  name: tmdb_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    unique: true
+                    uniqueConstraintName: uk_movies_tmdb_id
+              - column:
+                  name: poster_path
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+
+        - createIndex:
+            indexName: idx_movies_tmdb_id
+            tableName: movies
+            columns:
+              - column:
+                  name: tmdb_id

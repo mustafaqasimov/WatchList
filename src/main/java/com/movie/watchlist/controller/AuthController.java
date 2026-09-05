@@ -7,6 +7,7 @@ import com.movie.watchlist.service.impl.AuthServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -46,8 +48,23 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @Operation(summary = "Refresh Token", description = "Refreshes the authentication token using the provided refresh token")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid refresh token")
+    })
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody String refreshToken) {
-        return ResponseEntity.ok(authService.refreshToken(refreshToken));
+        return ResponseEntity.ok(authService.refreshAccessToken(refreshToken));
+    }
+
+    @Operation(summary = "Logout", description = "Logs out the current user")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logout successful")
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok().build();
     }
 }

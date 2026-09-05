@@ -1,4 +1,4 @@
 package com.movie.watchlist.service.interfaces;
 
-public interface AuthImpl {
+public interface AuthService {
 }

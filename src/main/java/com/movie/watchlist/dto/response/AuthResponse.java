@@ -14,8 +14,4 @@ public class AuthResponse {
     String accessToken;
     @Schema(description = "Refresh token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     String refreshToken;
-    @Schema(description = "User ID", example = "1")
-    Long userId;
-    @Schema(description = "User name", example = "Mustafa12")
-    String userName;
 }

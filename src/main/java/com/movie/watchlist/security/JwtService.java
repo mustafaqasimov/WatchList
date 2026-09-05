@@ -2,6 +2,7 @@ package com.movie.watchlist.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.movie.watchlist.entity.entities.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,7 @@ public class JwtService {
                 .withSubject(String.valueOf(user.getId()))
                 .withClaim("email", user.getEmail())
                 .withClaim("role", user.getRole().name())
+                .withClaim("type", "access")
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(accessExpirationMinutes, ChronoUnit.MINUTES)))
                 .sign(algorithm);
@@ -48,6 +50,7 @@ public class JwtService {
         return JWT.create()
                 .withIssuer(issuer)
                 .withSubject(String.valueOf(user.getId()))
+                .withClaim("type", "refresh")
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(refreshExpirationDays, ChronoUnit.DAYS)))
                 .sign(algorithm);
@@ -58,5 +61,44 @@ public class JwtService {
                 .withIssuer(issuer)
                 .build()
                 .verify(token);
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            verifyToken(token);
+            return true;
+        } catch (JWTVerificationException e) {
+            return false;
+        }
+    }
+
+    public boolean isAccessToken(String token) {
+        try {
+            String type = verifyToken(token).getClaim("type").asString();
+            return "access".equals(type);
+        } catch (JWTVerificationException e) {
+            return false;
+        }
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            String type = verifyToken(token).getClaim("type").asString();
+            return "refresh".equals(type);
+        } catch (JWTVerificationException e) {
+            return false;
+        }
+    }
+
+    public Long extractUserId(String token) {
+        return Long.parseLong(verifyToken(token).getSubject());
+    }
+
+    public String extractEmail(String token) {
+        return verifyToken(token).getClaim("email").asString();
+    }
+
+    public Date extractExpiration(String token) {
+        return verifyToken(token).getExpiresAt();
     }
 }

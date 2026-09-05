@@ -3,4 +3,10 @@ databaseChangeLog:
           file: db/changelog/changes/01-create-users-table.yaml
     - include:
         file: db/changelog/changes/02-create-movies-table.yaml
+    - include:
+        file: db/changelog/changes/03-add-moviename-field-to-movies.yaml
+    - include:
+          file: db/changelog/changes/04-create-refresh-token-table.yaml
+    - include:
+        file: db/changelog/changes/05-add-tmdbid-and-posterpath-to-movies.yaml
 

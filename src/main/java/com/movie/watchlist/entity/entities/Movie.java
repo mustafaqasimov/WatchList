@@ -22,6 +22,9 @@ import java.time.LocalDate;
 @Table(name = "movies")
 public class Movie extends BaseEntity {
 
+    @Column(name = "movie_name", length = 255, nullable = false)
+    String movieName;
+
     @Column(name = "description", length = 1000)
     String description;
 
@@ -34,4 +37,10 @@ public class Movie extends BaseEntity {
     @Column(name = "genre")
     @Enumerated(EnumType.STRING)
     Genre genre;
+
+    @Column(name = "poster_path")
+    String posterPath;
+
+    @Column(name = "tmdb_id", unique = true)
+    Long tmdbId;
 }

@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long>{
 
+
+
     Optional<User> findByIdAndActiveStatus(Long id, ActiveStatus activeStatus);
 
     List<User> findAllByActiveStatus(ActiveStatus activeStatus);

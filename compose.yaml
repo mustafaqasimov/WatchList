@@ -15,5 +15,11 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: watchlist-redis
+    ports:
+      - "6380:6379"
+
 volumes:
   postgres_data:

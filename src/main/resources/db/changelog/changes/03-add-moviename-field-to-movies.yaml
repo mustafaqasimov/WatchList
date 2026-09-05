@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 03-add-moviename-field-to-movies
+      author: mustafaqasimov
+      changes:
+        - addColumn:
+            tableName: movies
+            columns:
+              - column:
+                  name: movie_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

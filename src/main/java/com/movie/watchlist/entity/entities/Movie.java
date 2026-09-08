@@ -43,4 +43,7 @@ public class Movie extends BaseEntity {
 
     @Column(name = "tmdb_id", unique = true)
     Long tmdbId;
+
+    @Column(name = "popular")
+    boolean popular;
 }

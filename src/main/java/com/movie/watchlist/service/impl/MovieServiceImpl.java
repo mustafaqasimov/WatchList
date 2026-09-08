@@ -42,8 +42,8 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Page<MovieResponse> getAllMovies(Pageable pageable) {
-        return repository.findAllByActiveStatus(ActiveStatus.ACTIVE, pageable)
+    public Page<MovieResponse> getPopularMovies(Pageable pageable) {
+        return repository.findAllByPopularTrueAndActiveStatus(ActiveStatus.ACTIVE, pageable)
                 .map(movieMapper::toDTO);
     }
 

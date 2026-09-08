@@ -11,7 +11,7 @@ public interface MovieService {
 
     List<MovieResponse> addMovies(List<MovieRequest> dtos);
     MovieResponse getMovieById(Long id);
-    Page<MovieResponse> getAllMovies(Pageable pageable);
+    Page<MovieResponse> getPopularMovies(Pageable pageable);
     void deleteMovie(Long id);
 
 }

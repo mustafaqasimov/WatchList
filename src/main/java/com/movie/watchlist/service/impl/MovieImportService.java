@@ -6,6 +6,7 @@ import com.movie.watchlist.dto.request.MovieRequest;
 import com.movie.watchlist.dto.response.MovieResponse;
 import com.movie.watchlist.entity.entities.Movie;
 import com.movie.watchlist.enums.ActiveStatus;
+import com.movie.watchlist.exception.error.ResourceNotFoundException;
 import com.movie.watchlist.mapper.MovieMapper;
 import com.movie.watchlist.mapper.TmdbMovieMapper;
 import com.movie.watchlist.repositories.MovieRepository;
@@ -40,6 +41,7 @@ public class MovieImportService {
             if (movieRepository.existsByTmdbId(tmdb.id())) continue;
 
             MovieRequest request = tmdbMapper.toMovieRequest(tmdb, genreMap);
+            request.setPopular(true);
             movieService.addMovies(List.of(request));
             imported++;
         }
@@ -47,20 +49,22 @@ public class MovieImportService {
     }
 
     @Transactional
-    public MovieResponse addSingleMovie(long tmdbId) {
-        Optional<Movie> existing = movieRepository.findByTmdbId(tmdbId);
-
-        if (existing.isPresent()) {
-            Movie movie = existing.get();
+    public Movie getOrImportMovie(long tmdbId) {
+        Optional<Movie> existingMovie = movieRepository.findByTmdbId(tmdbId);
+        if (existingMovie.isPresent()) {
+            Movie movie = existingMovie.get();
             if (movie.getActiveStatus() == ActiveStatus.INACTIVE) {
                 movie.setActiveStatus(ActiveStatus.ACTIVE);
                 movieRepository.save(movie);
             }
-            return movieMapper.toDTO(movie);
+            return movie;
         }
-
         TmdbMovie details = tmdbMovieService.getMovieDetails(tmdbId);
         MovieRequest request = tmdbMapper.toMovieRequest(details, Map.of());
-        return movieService.addMovies(List.of(request)).getFirst();
+        request.setPopular(false);
+        MovieResponse response = movieService.addMovies(List.of(request))
+                .getFirst();
+        return movieRepository.findById(response.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found after import"));
     }
 }

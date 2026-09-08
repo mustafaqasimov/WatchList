@@ -44,4 +44,7 @@ public class MovieRequest {
 
     @Schema(example = "27205", description = "TMDB movie Id")
     Long tmdbId;
+
+    @Schema(description = "Indicates if the movie is popular")
+    Boolean popular;
 }

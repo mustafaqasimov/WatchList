@@ -9,4 +9,8 @@ databaseChangeLog:
           file: db/changelog/changes/04-create-refresh-token-table.yaml
     - include:
         file: db/changelog/changes/05-add-tmdbid-and-posterpath-to-movies.yaml
+    - include:
+        file: db/changelog/changes/06-add-popular-to-movies.yaml
+    - include:
+        file: db/changelog/changes/07-create-favorites-table.yaml
 

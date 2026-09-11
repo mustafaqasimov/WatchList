@@ -9,6 +9,7 @@ import com.movie.watchlist.mapper.MovieMapper;
 import com.movie.watchlist.repositories.MovieRepository;
 import com.movie.watchlist.service.interfaces.MovieService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MovieServiceImpl implements MovieService {
 
     private final MovieRepository repository;
@@ -27,31 +29,60 @@ public class MovieServiceImpl implements MovieService {
     @Transactional
     public List<MovieResponse> addMovies(List<MovieRequest> dtos) {
         if (dtos == null || dtos.isEmpty()) {
+            log.warn("Empty or null DTO list passed to addMovies");
             return List.of();
         }
 
+        log.debug("Batch adding {} movies to database", dtos.size());
         List<Movie> movies = movieMapper.toEntityList(dtos);
+
+        movies.forEach(movie -> {
+            if (movie.getActiveStatus() == null) {
+                movie.setActiveStatus(ActiveStatus.ACTIVE);
+            }
+        });
+
         List<Movie> savedMovies = repository.saveAll(movies);
+        log.info("Successfully added {} movies to catalog", savedMovies.size());
+
         return movieMapper.toDTOList(savedMovies);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MovieResponse getMovieById(Long id) {
-        return movieMapper.toDTO(repository.findByIdAndActiveStatus(id, ActiveStatus.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found")));
+        log.debug("Fetching active movie with ID: {}", id);
+
+        return repository.findByIdAndActiveStatus(id, ActiveStatus.ACTIVE)
+                .map(movieMapper::toDTO)
+                .orElseThrow(() -> {
+                    log.warn("Active movie not found with ID: {}", id);
+                    return new ResourceNotFoundException("Movie not found with ID: " + id);
+                });
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MovieResponse> getPopularMovies(Pageable pageable) {
+        log.debug("Fetching popular active movies page: {}", pageable.getPageNumber());
+
         return repository.findAllByPopularTrueAndActiveStatus(ActiveStatus.ACTIVE, pageable)
                 .map(movieMapper::toDTO);
     }
 
     @Override
+    @Transactional
     public void deleteMovie(Long id) {
+        log.debug("Soft deleting movie with ID: {}", id);
+
         Movie entity = repository.findByIdAndActiveStatus(id, ActiveStatus.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found"));
+                .orElseThrow(() -> {
+                    log.warn("Cannot delete. Active movie not found with ID: {}", id);
+                    return new ResourceNotFoundException("Movie not found with ID: " + id);
+                });
+
         entity.setActiveStatus(ActiveStatus.INACTIVE);
-        repository.save(entity);
+
+        log.info("Successfully soft deleted movie with ID: {}", id);
     }
 }

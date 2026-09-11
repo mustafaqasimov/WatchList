@@ -33,19 +33,15 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",
+                                "/api/v1/auth/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/v1/movie", "/api/v1/movie/*").permitAll()
-
-                                .requestMatchers(HttpMethod.POST, "/api/movies/{tmdbId}/add").hasAnyAuthority("USER", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/v1/movie/add").hasAnyAuthority("USER", "ADMIN")
-
-                                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/v1/movie/*").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/*",
+                                "/api/v1/movies/popular").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/search").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/movies")
+@RequestMapping("/api/v1/admin/movies")
 @RequiredArgsConstructor
 @Tag(name = "Admin Movie Management", description = "Endpoints for admin users to manage movies")
 public class AdminMovieController {

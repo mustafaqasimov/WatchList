@@ -15,6 +15,7 @@ import com.movie.watchlist.security.JwtService;
 import com.movie.watchlist.service.interfaces.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private static final String DUMMY_HASH = "$2a$12$yhnofnEDmL7otif7y1unQuNw8JFM4eFe4GafBW78DVKyA9Gpil4SS";
@@ -42,16 +44,22 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Override
+    @Transactional
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Registration failed. Email already exists: {}", request.getEmail());
             throw new ResourceAlreadyExistsException("Email already registered");
         }
 
-        userRepository.save(
+        User savedUser = userRepository.save(
                 userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()))
         );
+
+        log.info("User registered successfully with ID: {}", savedUser.getId());
     }
 
+    @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
@@ -62,10 +70,12 @@ public class AuthServiceImpl implements AuthService {
         );
 
         if (user == null || !passwordMatches) {
+            log.warn("Failed login attempt for email: {}", request.getEmail());
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
         if (user.getActiveStatus() != ActiveStatus.ACTIVE) {
+            log.warn("Inactive account login attempt for email: {}", request.getEmail());
             throw new InvalidCredentialsException("Account is not active");
         }
 
@@ -74,30 +84,41 @@ public class AuthServiceImpl implements AuthService {
 
         saveRefreshToken(user, refreshToken);
 
+        log.info("User successfully logged in with ID: {}", user.getId());
         return userMapper.toAuthResponse(user, accessToken, refreshToken);
     }
 
+    @Override
     @Transactional
     public AuthResponse refreshAccessToken(String rawRefreshToken) {
         if (!jwtService.isTokenValid(rawRefreshToken) || !jwtService.isRefreshToken(rawRefreshToken)) {
+            log.warn("Invalid refresh token structure provided");
             throw new InvalidCredentialsException("Invalid refresh token");
         }
 
         Long userId = jwtService.extractUserId(rawRefreshToken);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
+                .orElseThrow(() -> {
+                    log.warn("Refresh token user not found with ID: {}", userId);
+                    return new InvalidCredentialsException("Invalid refresh token");
+                });
 
+        String hashedInputToken = hashToken(rawRefreshToken);
         List<RefreshToken> activeTokens = refreshTokenRepository.findAllByUserAndRevokedFalse(user);
 
+        // DÜZƏLİŞ: SHA-256 heşi birbaşa string equals ilə yoxlanılır (BCrypt əvəzinə)
         boolean tokenExists = activeTokens.stream()
-                .anyMatch(rt -> passwordEncoder.matches(rawRefreshToken, rt.getToken())
+                .anyMatch(rt -> rt.getToken().equals(hashedInputToken)
                         && rt.getExpiryDate().isAfter(Instant.now()));
 
         if (!tokenExists) {
+            log.warn("Refresh token for user ID {} is expired or revoked", userId);
             throw new InvalidCredentialsException("Refresh token expired or revoked");
         }
 
         String newAccessToken = jwtService.generateAccessToken(user);
+        log.info("Access token successfully refreshed for user ID: {}", user.getId());
+
         return userMapper.toAuthResponse(user, newAccessToken, rawRefreshToken);
     }
 
@@ -109,17 +130,20 @@ public class AuthServiceImpl implements AuthService {
                 .token(hashedToken)
                 .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
                 .activeStatus(ActiveStatus.ACTIVE)
+                .revoked(false)
                 .build();
 
         refreshTokenRepository.save(tokenEntity);
     }
 
+    @Override
     public void logout(HttpServletRequest request) {
         String token = extractToken(request);
 
         if (token != null && jwtService.isTokenValid(token)) {
             Date expiration = jwtService.extractExpiration(token);
             tokenBlacklistService.blacklist(token, expiration);
+            log.info("Token blacklisted successfully during logout");
         }
 
         SecurityContextHolder.clearContext();
@@ -136,6 +160,7 @@ public class AuthServiceImpl implements AuthService {
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
+            log.error("SHA-256 algorithm not available for token hashing", e);
             throw new RuntimeException("Error hashing token", e);
         }
     }

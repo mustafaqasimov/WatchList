@@ -5,6 +5,7 @@ import com.movie.watchlist.enums.Role;
 import com.movie.watchlist.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,14 +29,14 @@ public class DataInitializer implements CommandLineRunner {
     private String adminPassword;
 
     @Override
-    public void run(String... args) {
+    public void run(String @NonNull ... args) {
         if (userRepository.existsByEmail(adminEmail)) {
             log.info("Admin user '{}' already exists, skipping initialization", adminEmail);
             return;
         }
 
         User admin = User.builder()
-                .username(adminUsername)
+                .userName(adminUsername)
                 .email(adminEmail)
                 .password(passwordEncoder.encode(adminPassword))
                 .role(Role.ROLE_ADMIN)

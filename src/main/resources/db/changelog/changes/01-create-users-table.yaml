@@ -14,7 +14,7 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: username
+                  name: user_name
                   type: VARCHAR(255)
                   constraints:
                     unique: true

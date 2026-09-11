@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface FavoriteRepository
         extends JpaRepository<Favorite, Long> {
@@ -19,14 +21,13 @@ public interface FavoriteRepository
     );
 
 
-    Page<Favorite> findAllByUser(
-            User user,
+    Page<Favorite> findAllByUserId(
+            Long userId,
             Pageable pageable
     );
 
-
-    void deleteByUserAndMovie(
-            User user,
-            Movie movie
+    Optional<Favorite> findByUserIdAndMovieTmdbId(
+            Long userId,
+            Long tmdbId
     );
 }

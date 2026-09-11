@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
 @Tag(name = "Movie Discovery", description = "Endpoints for discovering movies")
 public class MovieDiscoveryController {

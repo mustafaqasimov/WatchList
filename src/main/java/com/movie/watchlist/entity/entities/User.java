@@ -18,8 +18,8 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "users")
 public class User extends BaseEntity {
 
-    @Column(name = "username", unique = true, nullable = false)
-    String username;
+    @Column(name = "user_name", unique = true, nullable = false)
+    private String userName;
 
     @Column(name = "password", nullable = false)
     @JsonIgnore

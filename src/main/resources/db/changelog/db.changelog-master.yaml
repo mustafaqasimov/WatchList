@@ -13,4 +13,8 @@ databaseChangeLog:
         file: db/changelog/changes/06-add-popular-to-movies.yaml
     - include:
         file: db/changelog/changes/07-create-favorites-table.yaml
+    - include:
+          file: db/changelog/changes/08-add-email-verified-to-users.yaml
+    - include:
+          file: db/changelog/changes/09-create-verification-tokens-table.yaml
 

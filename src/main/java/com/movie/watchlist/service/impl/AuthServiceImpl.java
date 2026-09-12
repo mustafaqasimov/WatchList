@@ -1,21 +1,29 @@
 package com.movie.watchlist.service.impl;
 
+import com.movie.watchlist.dto.request.ChangePasswordRequest;
 import com.movie.watchlist.dto.request.LoginRequest;
 import com.movie.watchlist.dto.request.RegisterRequest;
 import com.movie.watchlist.dto.response.AuthResponse;
 import com.movie.watchlist.entity.entities.RefreshToken;
 import com.movie.watchlist.entity.entities.User;
+import com.movie.watchlist.entity.entities.VerificationToken;
 import com.movie.watchlist.enums.ActiveStatus;
+import com.movie.watchlist.enums.TokenType;
 import com.movie.watchlist.exception.error.InvalidCredentialsException;
+import com.movie.watchlist.exception.error.PasswordMismatchException;
 import com.movie.watchlist.exception.error.ResourceAlreadyExistsException;
+import com.movie.watchlist.exception.error.ResourceNotFoundException;
 import com.movie.watchlist.mapper.UserMapper;
 import com.movie.watchlist.repositories.RefreshTokenRepository;
 import com.movie.watchlist.repositories.UserRepository;
+import com.movie.watchlist.repositories.VerificationTokenRepository;
 import com.movie.watchlist.security.JwtService;
 import com.movie.watchlist.service.interfaces.AuthService;
+import com.movie.watchlist.service.interfaces.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +37,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,26 +46,33 @@ public class AuthServiceImpl implements AuthService {
 
     private static final String DUMMY_HASH = "$2a$12$yhnofnEDmL7otif7y1unQuNw8JFM4eFe4GafBW78DVKyA9Gpil4SS";
 
+    @Value("${app.verification-token-expiration-minutes}")
+    private int verificationTokenExpirationMinutes;
+
     private final TokenBlacklistService tokenBlacklistService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
     public void register(RegisterRequest request) {
+        log.info("Attempting to register user with email: {}", request.getEmail());
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Registration failed. Email already exists: {}", request.getEmail());
+            log.warn("Registration failed: Email {} is already registered", request.getEmail());
             throw new ResourceAlreadyExistsException("Email already registered");
         }
-
-        User savedUser = userRepository.save(
+        User user = userRepository.save(
                 userMapper.toEntity(request, passwordEncoder.encode(request.getPassword()))
         );
-
-        log.info("User registered successfully with ID: {}", savedUser.getId());
+        String rawToken = generateAndSaveToken(user, TokenType.EMAIL_VERIFICATION, verificationTokenExpirationMinutes);
+        emailService.sendVerificationEmail(user.getEmail(), rawToken);
+        log.info("User registered successfully with ID: {}. Verification email sent.", user.getId());
     }
 
     @Override
@@ -72,6 +88,10 @@ public class AuthServiceImpl implements AuthService {
         if (user == null || !passwordMatches) {
             log.warn("Failed login attempt for email: {}", request.getEmail());
             throw new InvalidCredentialsException("Invalid username or password");
+        }
+
+        if (!user.isEmailVerified()) {
+            throw new InvalidCredentialsException("Please verify your email before logging in");
         }
 
         if (user.getActiveStatus() != ActiveStatus.ACTIVE) {
@@ -106,7 +126,6 @@ public class AuthServiceImpl implements AuthService {
         String hashedInputToken = hashToken(rawRefreshToken);
         List<RefreshToken> activeTokens = refreshTokenRepository.findAllByUserAndRevokedFalse(user);
 
-        // DÜZƏLİŞ: SHA-256 heşi birbaşa string equals ilə yoxlanılır (BCrypt əvəzinə)
         boolean tokenExists = activeTokens.stream()
                 .anyMatch(rt -> rt.getToken().equals(hashedInputToken)
                         && rt.getExpiryDate().isAfter(Instant.now()));
@@ -120,6 +139,21 @@ public class AuthServiceImpl implements AuthService {
         log.info("Access token successfully refreshed for user ID: {}", user.getId());
 
         return userMapper.toAuthResponse(user, newAccessToken, rawRefreshToken);
+    }
+
+    public void verifyEmail(String rawToken) {
+        VerificationToken token = findValidToken(rawToken, TokenType.EMAIL_VERIFICATION);
+        token.getUser().setEmailVerified(true);
+        token.setUsed(true);
+        userRepository.save(token.getUser());
+        verificationTokenRepository.save(token);
+    }
+
+    public void forgotPassword(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String rawToken = generateAndSaveToken(user, TokenType.PASSWORD_RESET, 15);
+            emailService.sendPasswordResetEmail(user.getEmail(), rawToken);
+        });
     }
 
     private void saveRefreshToken(User user, String refreshToken) {
@@ -149,6 +183,37 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.clearContext();
     }
 
+    @Transactional
+    public void resetPassword(String rawToken, String newPassword) {
+        VerificationToken token = findValidToken(rawToken, TokenType.PASSWORD_RESET);
+        User user = token.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        token.setUsed(true);
+        userRepository.save(user);
+        verificationTokenRepository.save(token);
+        refreshTokenRepository.revokeAllByUser(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new PasswordMismatchException("New passwords do not match");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Old password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        refreshTokenRepository.revokeAllByUser(user);
+    }
+
     private String extractToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         return (header != null && header.startsWith("Bearer ")) ? header.substring(7) : null;
@@ -163,5 +228,28 @@ public class AuthServiceImpl implements AuthService {
             log.error("SHA-256 algorithm not available for token hashing", e);
             throw new RuntimeException("Error hashing token", e);
         }
+    }
+
+    private String generateAndSaveToken(User user, TokenType type, int expirationMinutes) {
+        String rawToken = UUID.randomUUID().toString();
+        VerificationToken token = VerificationToken.builder()
+                .user(user)
+                .tokenHash(hashToken(rawToken))
+                .type(type)
+                .expiryDate(Instant.now().plus(expirationMinutes, ChronoUnit.MINUTES))
+                .used(false)
+                .build();
+        verificationTokenRepository.save(token);
+        return rawToken;
+    }
+
+    private VerificationToken findValidToken(String rawToken, TokenType type) {
+        String hash = hashToken(rawToken);
+        VerificationToken token = verificationTokenRepository.findByTokenHashAndType(hash, type)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid or expired token"));
+        if (token.isUsed() || token.getExpiryDate().isBefore(Instant.now())) {
+            throw new InvalidCredentialsException("Invalid or expired token");
+        }
+        return token;
     }
 }

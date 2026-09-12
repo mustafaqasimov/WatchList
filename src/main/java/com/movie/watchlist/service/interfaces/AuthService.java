@@ -1,11 +1,14 @@
 package com.movie.watchlist.service.interfaces;
 
+import com.movie.watchlist.dto.request.ChangePasswordRequest;
 import com.movie.watchlist.dto.request.LoginRequest;
 import com.movie.watchlist.dto.request.RegisterRequest;
 import com.movie.watchlist.dto.response.AuthResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface AuthService {
+        void changePassword(Long userId, ChangePasswordRequest request);
+
         void register(RegisterRequest request);
 
         AuthResponse login(LoginRequest request);

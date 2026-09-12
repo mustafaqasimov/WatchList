@@ -23,16 +23,19 @@ public class TmdbMovieService {
 
     private final RestClient tmdbRestClient;
 
+    @Cacheable(value = "popularMovies", key = "#page")
     public TmdbMovieResponse getPopularMovies(int page) {
         log.debug("Fetching popular movies from TMDB for page: {}", page);
         return executeGet("/movie/popular", Map.of("page", String.valueOf(page)));
     }
 
+    @Cacheable(value = "movieSearch", key = "#query.toLowerCase() + '-' + #page")
     public TmdbMovieResponse searchMovies(String query, int page) {
         log.debug("Searching movies on TMDB with query: '{}', page: {}", query, page);
         return executeGet("/search/movie", Map.of("query", query, "page", String.valueOf(page)));
     }
 
+    @Cacheable(value = "movieDetails", key = "#tmdbId")
     public TmdbMovie getMovieDetails(long tmdbId) {
         log.debug("Fetching details from TMDB for movie ID: {}", tmdbId);
         try {

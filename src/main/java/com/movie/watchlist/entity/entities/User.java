@@ -31,4 +31,8 @@ public class User extends BaseEntity {
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     Role role;
+
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    boolean emailVerified = false;
 }

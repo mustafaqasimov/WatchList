@@ -38,6 +38,7 @@ public class EmailServiceImpl implements EmailService {
 
     private void send(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("onboarding@resend.dev");
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);

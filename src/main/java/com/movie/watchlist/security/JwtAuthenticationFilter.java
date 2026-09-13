@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // STEP 1: Header yoxlanışı
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.error(">>> [STEP 1 FAILED] Header missing or not starting with Bearer. URI: {}, Header: {}",
+            log.debug(">>> [STEP 1 FAILED] Header missing or not starting with Bearer. URI: {}, Header: {}",
                     request.getRequestURI(), authHeader);
             filterChain.doFilter(request, response);
             return;
@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // STEP 2: Blacklist yoxlanışı
             boolean isBlacklisted = blacklistService.isBlacklisted(token);
             if (isBlacklisted) {
-                log.error(">>> [STEP 2 FAILED] Token is blacklisted for URI: {}", request.getRequestURI());
+                log.debug(">>> [STEP 2 FAILED] Token is blacklisted for URI: {}", request.getRequestURI());
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -57,13 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             boolean isAccess = jwtService.isAccessToken(token);
             boolean isValid = jwtService.isTokenValid(token);
 
-            log.error(">>> [STEP 3 CHECK] isAccessToken: {}, isTokenValid: {}", isAccess, isValid);
+            log.debug(">>> [STEP 3 CHECK] isAccessToken: {}, isTokenValid: {}", isAccess, isValid);
 
             if (isAccess && isValid) {
                 String email = jwtService.extractEmail(token);
                 var currentAuth = SecurityContextHolder.getContext().getAuthentication();
 
-                log.error(">>> [STEP 4 CHECK] Extracted Email: {}, Current Context Auth: {}", email, currentAuth);
+                log.debug(">>> [STEP 4 CHECK] Extracted Email: {}, Current Context Auth: {}", email, currentAuth);
 
                 if (email != null && currentAuth == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -78,13 +78,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    log.error(">>> [SUCCESS] Authenticated User: {}, Authorities: {}", email, userDetails.getAuthorities());
+                    log.debug(">>> [SUCCESS] Authenticated User: {}, Authorities: {}", email, userDetails.getAuthorities());
                 }
             } else {
-                log.error(">>> [STEP 3 FAILED] Token is invalid or not an access token");
+                log.debug(">>> [STEP 3 FAILED] Token is invalid or not an access token");
             }
         } catch (Exception ex) {
-            log.error(">>> [EXCEPTION THROWN] JWT processing failed for URI '{}': ", request.getRequestURI(), ex);
+            log.debug(">>> [EXCEPTION THROWN] JWT processing failed for URI '{}': ", request.getRequestURI(), ex);
             SecurityContextHolder.clearContext();
         }
 

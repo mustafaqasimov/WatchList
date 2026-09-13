@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 08-add-email-verified-to-users
+      author: mustafaqasimov
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: email_verified
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

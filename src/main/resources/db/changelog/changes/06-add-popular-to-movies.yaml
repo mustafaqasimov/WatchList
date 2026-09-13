@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 06-add-popular-to-movies
+      author: mustafaqasimov
+      changes:
+        - addColumn:
+            tableName: movies
+            columns:
+              - column:
+                  name: popular
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false

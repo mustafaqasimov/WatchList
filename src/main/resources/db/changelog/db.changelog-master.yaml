@@ -17,4 +17,6 @@ databaseChangeLog:
           file: db/changelog/changes/08-add-email-verified-to-users.yaml
     - include:
           file: db/changelog/changes/09-create-verification-tokens-table.yaml
+    - include:
+        file: db/changelog/changes/010-add-avatar-to-users.yaml
 

@@ -33,6 +33,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
     show-sql: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 server:
   port: ${PORT:8080}
@@ -62,3 +66,8 @@ tmdb:
   api:
     key: ${TMDB_API_KEY}
     base-url: https://api.themoviedb.org/3
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}

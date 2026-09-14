@@ -2,6 +2,7 @@ package com.movie.watchlist.mapper;
 
 import com.movie.watchlist.dto.request.RegisterRequest;
 import com.movie.watchlist.dto.response.AuthResponse;
+import com.movie.watchlist.dto.response.UserResponse;
 import com.movie.watchlist.entity.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,5 +18,8 @@ public interface UserMapper {
     @Mapping(target = "accessToken", source = "accessToken")
     @Mapping(target = "refreshToken", source = "refreshToken")
     AuthResponse toAuthResponse(User user, String accessToken, String refreshToken);
+
+    @Mapping(target = "emailVerified", source = "emailVerified")
+    UserResponse toResponse(User user);
 
 }

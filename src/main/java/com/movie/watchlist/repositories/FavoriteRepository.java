@@ -3,6 +3,7 @@ package com.movie.watchlist.repositories;
 import com.movie.watchlist.entity.entities.Favorite;
 import com.movie.watchlist.entity.entities.Movie;
 import com.movie.watchlist.entity.entities.User;
+import com.movie.watchlist.enums.ActiveStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,13 +22,11 @@ public interface FavoriteRepository
     );
 
 
-    Page<Favorite> findAllByUserId(
+    Page<Favorite> findAllByUserIdAndActiveStatus(
             Long userId,
+            ActiveStatus status,
             Pageable pageable
     );
 
-    Optional<Favorite> findByUserIdAndMovieTmdbId(
-            Long userId,
-            Long tmdbId
-    );
+    Optional<Favorite> findByUserIdAndMovieTmdbIdAndActiveStatus(Long userId, Long tmdbId, ActiveStatus status);
 }

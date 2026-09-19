@@ -17,6 +17,8 @@ public class FavoriteResponse {
     Long id;
     @Schema(description = "Movie ID", example = "12345")
     Long movieId;
+    @Schema(description = "TMDB ID", example = "603")
+    Long tmdbId;
     @Schema(description = "Movie Name", example = "The Matrix")
     String movieName;
     @Schema(description = "Poster Path", example = "/path/to/poster.jpg")

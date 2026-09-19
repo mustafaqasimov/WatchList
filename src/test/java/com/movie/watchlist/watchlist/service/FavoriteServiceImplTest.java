@@ -4,6 +4,7 @@ import com.movie.watchlist.dto.response.FavoriteResponse;
 import com.movie.watchlist.entity.entities.Favorite;
 import com.movie.watchlist.entity.entities.Movie;
 import com.movie.watchlist.entity.entities.User;
+import com.movie.watchlist.enums.ActiveStatus;
 import com.movie.watchlist.exception.error.ResourceAlreadyExistsException;
 import com.movie.watchlist.exception.error.ResourceNotFoundException;
 import com.movie.watchlist.mapper.FavoriteMapper;
@@ -103,7 +104,7 @@ class FavoriteServiceImplTest {
         Page<Favorite> favoritePage = new PageImpl<>(List.of(favorite), pageable, 1);
 
         when(userRepository.existsById(USER_ID)).thenReturn(true);
-        when(favoriteRepository.findAllByUserId(USER_ID, pageable)).thenReturn(favoritePage);
+        when(favoriteRepository.findAllByUserIdAndActiveStatus(USER_ID, ActiveStatus.ACTIVE, pageable)).thenReturn(favoritePage);
         when(favoriteMapper.toDTO(favorite)).thenReturn(response);
 
         Page<FavoriteResponse> result = favoriteService.getFavorites(USER_ID, pageable);
@@ -119,7 +120,7 @@ class FavoriteServiceImplTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> favoriteService.getFavorites(USER_ID, pageable));
 
-        verify(favoriteRepository, never()).findAllByUserId(any(), any());
+        verify(favoriteRepository, never()).findAllByUserIdAndActiveStatus(any(), any(), any());
     }
 
     // ---------- removeFavorite ----------
@@ -127,17 +128,17 @@ class FavoriteServiceImplTest {
     @Test
     void removeFavorite_deletesFavorite_whenItExists() {
         Favorite favorite = mock(Favorite.class);
-        when(favoriteRepository.findByUserIdAndMovieTmdbId(USER_ID, TMDB_ID))
+        when(favoriteRepository.findByUserIdAndMovieTmdbIdAndActiveStatus(USER_ID, TMDB_ID, ActiveStatus.ACTIVE))
                 .thenReturn(Optional.of(favorite));
 
         favoriteService.removeFavorite(USER_ID, TMDB_ID);
 
-        verify(favoriteRepository).delete(favorite);
+        verify(favoriteRepository).save(favorite);
     }
 
     @Test
     void removeFavorite_throwsResourceNotFound_whenFavoriteDoesNotExist() {
-        when(favoriteRepository.findByUserIdAndMovieTmdbId(USER_ID, TMDB_ID))
+        when(favoriteRepository.findByUserIdAndMovieTmdbIdAndActiveStatus(USER_ID, TMDB_ID, ActiveStatus.ACTIVE))
                 .thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,

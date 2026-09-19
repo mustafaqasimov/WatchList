@@ -4,6 +4,7 @@ import com.movie.watchlist.dto.response.FavoriteResponse;
 import com.movie.watchlist.entity.entities.Favorite;
 import com.movie.watchlist.entity.entities.Movie;
 import com.movie.watchlist.entity.entities.User;
+import com.movie.watchlist.enums.ActiveStatus;
 import com.movie.watchlist.exception.error.ResourceAlreadyExistsException;
 import com.movie.watchlist.exception.error.ResourceNotFoundException;
 import com.movie.watchlist.mapper.FavoriteMapper;
@@ -62,7 +63,7 @@ public class FavoriteServiceImpl implements FavoriteService {
             throw new ResourceNotFoundException("User not found with ID: " + userId);
         }
 
-        return favoriteRepository.findAllByUserId(userId, pageable)
+        return favoriteRepository.findAllByUserIdAndActiveStatus(userId, ActiveStatus.ACTIVE, pageable)
                 .map(favoriteMapper::toDTO);
     }
 
@@ -71,13 +72,15 @@ public class FavoriteServiceImpl implements FavoriteService {
     public void removeFavorite(Long userId, Long tmdbId) {
         log.debug("Removing movie with TMDB ID {} from favorites for user ID {}", tmdbId, userId);
 
-        Favorite favorite = favoriteRepository.findByUserIdAndMovieTmdbId(userId, tmdbId)
+        Favorite favorite = favoriteRepository.findByUserIdAndMovieTmdbIdAndActiveStatus(userId,
+                        tmdbId,
+                        ActiveStatus.ACTIVE)
                 .orElseThrow(() -> {
                     log.warn("Favorite movie not found for user ID {} and TMDB ID {}", userId, tmdbId);
                     return new ResourceNotFoundException("Movie not found in favorites");
                 });
-
-        favoriteRepository.delete(favorite);
+        favorite.setActiveStatus(ActiveStatus.INACTIVE);
+        favoriteRepository.save(favorite);
         log.info("Successfully removed movie TMDB ID {} from favorites for user ID {}", tmdbId, userId);
     }
 }

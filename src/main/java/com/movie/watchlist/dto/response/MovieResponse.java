@@ -26,4 +26,6 @@ public class MovieResponse {
     Double rating;
     @Schema(description = "The genre of the movie", example = "ACTION")
     Genre genre;
+    @Schema(example = "/qCzXz5nWXjkVjqhaAcQtoT8AbPh.jpg", description = "TMDB poster path")
+    String posterPath;
 }

@@ -31,16 +31,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public UserResponse updateAvatar(Long userId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Avatar file is empty");
+        }
+
+        if (file.getContentType() == null ||
+                !file.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Only image files are allowed");
+        }
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with ID: " + userId));
 
         String avatarUrl = storageService.upload(file, "avatars");
+
         user.setAvatarUrl(avatarUrl);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         log.info("Avatar updated for user ID: {}", userId);
-        return userMapper.toResponse(user);
+
+        return userMapper.toResponse(savedUser);
     }
 }

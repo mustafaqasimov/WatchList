@@ -16,6 +16,8 @@ import java.time.LocalDate;
 public class MovieResponse {
     @Schema(description = "The ID of the movie", example = "1")
     Long id;
+    @Schema(description = "The TMDB ID of the movie", example = "550")
+    Long tmdbId;
     @Schema(description = "The name of the movie", example = "The Matrix")
     String movieName;
     @Schema(description = "The description of the movie", example = "A thrilling action movie")

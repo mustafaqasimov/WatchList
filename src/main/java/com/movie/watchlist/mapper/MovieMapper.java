@@ -13,6 +13,7 @@ public interface MovieMapper {
     Movie toEntity(MovieRequest movieRequestDTO);
 
     MovieResponse toDTO(Movie movie);
+
     List<Movie> toEntityList(List<MovieRequest> dtos);
 
     List<MovieResponse> toDTOList(List<Movie> movies);

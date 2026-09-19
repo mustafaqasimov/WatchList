@@ -55,10 +55,14 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Avatar uploaded successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid file format")
     })
-    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponse> uploadAvatar(
-            @AuthenticationPrincipal CustomUserDetails principal,
-            @RequestPart("file") MultipartFile file) {
-        return ResponseEntity.ok(userService.updateAvatar(principal.getId(), file));
+    @PostMapping(
+            value = "/me/avatar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UserResponse> updateAvatar(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ResponseEntity.ok(userService.updateAvatar(userDetails.getId(), file));
     }
 }

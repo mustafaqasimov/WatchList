@@ -29,4 +29,6 @@ public interface FavoriteRepository
     );
 
     Optional<Favorite> findByUserIdAndMovieTmdbIdAndActiveStatus(Long userId, Long tmdbId, ActiveStatus status);
+
+    Optional<Favorite> findByUserAndMovie(User user, Movie movie);
 }

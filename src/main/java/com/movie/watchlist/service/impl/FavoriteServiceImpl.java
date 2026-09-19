@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,22 +36,43 @@ public class FavoriteServiceImpl implements FavoriteService {
         log.debug("Adding movie with TMDB ID {} to favorites for user ID {}", tmdbId, userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with ID: " + userId));
 
         Movie movie = movieImportService.getOrImportMovie(tmdbId);
 
-        if (favoriteRepository.existsByUserAndMovie(user, movie)) {
-            log.warn("User ID {} attempted to add duplicate favorite movie TMDB ID {}", userId, tmdbId);
-            throw new ResourceAlreadyExistsException("Movie already in favorites");
+        Optional<Favorite> existingFavorite =
+                favoriteRepository.findByUserAndMovie(user, movie);
+
+        if (existingFavorite.isPresent()) {
+            Favorite favorite = existingFavorite.get();
+
+            if (favorite.getActiveStatus() == ActiveStatus.ACTIVE) {
+                log.warn("User ID {} attempted to add duplicate favorite movie TMDB ID {}",
+                        userId, tmdbId);
+
+                throw new ResourceAlreadyExistsException("Movie already in favorites");
+            }
+
+            favorite.setActiveStatus(ActiveStatus.ACTIVE);
+            Favorite restoredFavorite = favoriteRepository.save(favorite);
+
+            log.info("Restored favorite movie TMDB ID {} for user ID {}",
+                    tmdbId, userId);
+
+            return favoriteMapper.toDTO(restoredFavorite);
         }
 
         Favorite favorite = Favorite.builder()
                 .user(user)
                 .movie(movie)
+                .activeStatus(ActiveStatus.ACTIVE)
                 .build();
 
         Favorite savedFavorite = favoriteRepository.save(favorite);
-        log.info("Successfully added movie TMDB ID {} to favorites for user ID {}", tmdbId, userId);
+
+        log.info("Successfully added movie TMDB ID {} to favorites for user ID {}",
+                tmdbId, userId);
 
         return favoriteMapper.toDTO(savedFavorite);
     }

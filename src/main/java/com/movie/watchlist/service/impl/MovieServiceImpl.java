@@ -13,11 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -99,32 +99,61 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public Object getMovieVideos(Long tmdbId) {
-        String url = UriComponentsBuilder
-                .fromUriString(tmdbBaseUrl)
-                .pathSegment("movie", String.valueOf(tmdbId), "videos")
-                .queryParam("api_key", tmdbApiKey.trim())
-                .queryParam("language", "en-US")
-                .toUriString();
+        String token = tmdbApiKey == null ? "" : tmdbApiKey.trim();
+        String url = tmdbBaseUrl
+                + "/movie/"
+                + tmdbId
+                + "/videos?language=en-US";
+        log.info("TMDB videos request started. tmdbId={}, baseUrl={}",
+                tmdbId,
+                tmdbBaseUrl);
+        log.debug("TMDB token status. present={}, length={}",
+                !token.isEmpty(),
+                token.length());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            log.info("Requesting movie videos from TMDB. tmdbId={}", tmdbId);
+            ResponseEntity<Object> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    Object.class
+            );
+            log.info(
+                    "TMDB videos request succeeded. tmdbId={}, status={}",
+                    tmdbId,
+                    response.getStatusCode().value()
+            );
+            log.debug("TMDB videos response received. tmdbId={}, body={}",
+                    tmdbId,
+                    response.getBody());
 
-            return restTemplate.getForObject(url, Object.class);
-
+            return response.getBody();
         } catch (RestClientResponseException ex) {
             log.error(
                     "TMDB videos request failed. tmdbId={}, status={}, response={}",
                     tmdbId,
-                    ex.getStatusCode(),
+                    ex.getStatusCode().value(),
                     ex.getResponseBodyAsString(),
                     ex
             );
-
             throw new RuntimeException(
                     "TMDB videos request failed with status "
                             + ex.getStatusCode().value(),
                     ex
             );
+        } catch (Exception ex) {
+            log.error(
+                    "Unexpected error while requesting TMDB videos. tmdbId={}",
+                    tmdbId,
+                    ex
+            );
+            throw new RuntimeException("Movie videos request failed", ex);
         }
     }
 }

@@ -10,10 +10,12 @@ import com.movie.watchlist.repositories.MovieRepository;
 import com.movie.watchlist.service.interfaces.MovieService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -22,8 +24,12 @@ import java.util.List;
 @Slf4j
 public class MovieServiceImpl implements MovieService {
 
+    @Value("${tmdb.api.key}")
+    private String tmdbApiKey;
+
     private final MovieRepository repository;
     private final MovieMapper movieMapper;
+    private final RestTemplate restTemplate;
 
     @Override
     @Transactional
@@ -84,5 +90,12 @@ public class MovieServiceImpl implements MovieService {
         entity.setActiveStatus(ActiveStatus.INACTIVE);
 
         log.info("Successfully soft deleted movie with ID: {}", id);
+    }
+
+    @Override
+    public Object getMovieVideos(Long tmdbId) {
+        String url = "https://api.themoviedb.org/3/movie/" + tmdbId + "/videos?api_key=" + tmdbApiKey;
+
+        return restTemplate.getForObject(url, Object.class);
     }
 }

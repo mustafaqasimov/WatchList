@@ -27,6 +27,9 @@ public class MovieServiceImpl implements MovieService {
     @Value("${tmdb.api.key}")
     private String tmdbApiKey;
 
+    @Value("${tmdb.api.base-url}")
+    private String tmdbBaseUrl;
+
     private final MovieRepository repository;
     private final MovieMapper movieMapper;
     private final RestTemplate restTemplate;
@@ -94,7 +97,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public Object getMovieVideos(Long tmdbId) {
-        String url = "https://api.themoviedb.org/3/movie/" + tmdbId + "/videos?api_key=" + tmdbApiKey;
+        String url = tmdbBaseUrl + "/movie/" + tmdbId + "/videos?api_key=" + tmdbApiKey;
 
         return restTemplate.getForObject(url, Object.class);
     }

@@ -15,7 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -97,8 +99,33 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public Object getMovieVideos(Long tmdbId) {
-        String url = tmdbBaseUrl + "/movie/" + tmdbId + "/videos?api_key=" + tmdbApiKey;
+        String url = UriComponentsBuilder
+                .fromUriString(tmdbBaseUrl)
+                .pathSegment("movie", String.valueOf(tmdbId), "videos")
+                .queryParam("api_key", tmdbApiKey.trim())
+                .queryParam("language", "en-US")
+                .toUriString();
 
-        return restTemplate.getForObject(url, Object.class);
+        try {
+            log.info("Requesting movie videos from TMDB. tmdbId={}", tmdbId);
+
+            return restTemplate.getForObject(url, Object.class);
+
+        } catch (RestClientResponseException ex) {
+            log.error(
+                    "TMDB videos request failed. tmdbId={}, status={}, response={}",
+                    tmdbId,
+                    ex.getStatusCode(),
+                    ex.getResponseBodyAsString(),
+                    ex
+            );
+
+            throw new RuntimeException(
+                    "TMDB videos request failed with status "
+                            + ex.getStatusCode().value(),
+                    ex
+            );
+        }
     }
 }
+

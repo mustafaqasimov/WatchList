@@ -13,5 +13,6 @@ public interface MovieService {
     MovieResponse getMovieById(Long id);
     Page<MovieResponse> getPopularMovies(Pageable pageable);
     void deleteMovie(Long id);
+    Object getMovieVideos(Long tmdbId);
 
 }

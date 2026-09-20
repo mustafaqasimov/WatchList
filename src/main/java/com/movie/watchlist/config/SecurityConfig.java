@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/movies/*",
                                 "/api/v1/movies/popular").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/movies/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

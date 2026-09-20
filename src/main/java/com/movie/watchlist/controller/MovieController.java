@@ -41,4 +41,14 @@ public class MovieController {
             @PageableDefault(size = 20) @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(movieService.getPopularMovies(pageable));
     }
+
+    @Operation(summary = "Get movie videos", description = "Retrieves video information for a movie")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Movie videos retrieved successfully")
+    })
+    @GetMapping("/{id}/videos")
+    public ResponseEntity<Object> getMovieVideos(@PathVariable Long id) {
+        Object videos = movieService.getMovieVideos(id);
+        return ResponseEntity.ok(videos);
+    }
 }

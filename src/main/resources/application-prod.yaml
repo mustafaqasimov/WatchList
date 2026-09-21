@@ -52,6 +52,11 @@ app:
   verification-token-expiration-minutes: 1440
   reset-token-expiration-minutes: 15
 
+resend:
+  api:
+    key: ${RESEND_API_KEY}
+  from: ${RESEND_FROM}
+
 security:
   jwt:
     secret: ${JWT_SECRET}

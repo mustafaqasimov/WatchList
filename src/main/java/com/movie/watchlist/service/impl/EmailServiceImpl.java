@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -31,7 +33,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async
     public void sendVerificationEmail(String to, String rawToken) {
-        String link = frontendUrl + "/verify-email?token=" + rawToken;
+        String link = frontendUrl
+                + "/#/verify-email?token="
+                + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
 
         String htmlBody =
                 "Hello, please click the link to verify your email: "
@@ -45,7 +49,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async
     public void sendPasswordResetEmail(String to, String rawToken) {
-        String link = frontendUrl + "/reset-password?token=" + rawToken;
+        String link = frontendUrl
+                + "/#/reset-password?token="
+                + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
 
         String htmlBody =
                 "Please click the link to reset your password: "

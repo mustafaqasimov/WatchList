@@ -15,13 +15,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    // Spring Boot 3-ün yeni RestClient funksionallığı vasitəsilə Resend API-yə qoşuluruq
     private final RestClient restClient = RestClient.builder()
             .baseUrl("https://api.resend.com")
             .build();
 
     @Value("${resend.api.key}")
     private String resendApiKey;
+
+    @Value("${resend.from}")
+    private String resendFrom;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -31,10 +33,11 @@ public class EmailServiceImpl implements EmailService {
     public void sendVerificationEmail(String to, String rawToken) {
         String link = frontendUrl + "/verify-email?token=" + rawToken;
 
-        // Mətni HTML formatında göndəririk ki, istifadəçi linkə birbaşa klikləyə bilsin
-        String htmlBody = "Hello, please click the link to verify your email: <a href='" + link + "'>Verify Here</a>" +
-                "<br><br>" +
-                "The link is valid for 24 hours.";
+        String htmlBody =
+                "Hello, please click the link to verify your email: "
+                        + "<a href='" + link + "'>Verify Here</a>"
+                        + "<br><br>"
+                        + "The link is valid for 24 hours.";
 
         send(to, "Verify Email", htmlBody);
     }
@@ -44,16 +47,18 @@ public class EmailServiceImpl implements EmailService {
     public void sendPasswordResetEmail(String to, String rawToken) {
         String link = frontendUrl + "/reset-password?token=" + rawToken;
 
-        String htmlBody = "Please click the link to reset your password: <a href='" + link + "'>Reset Password</a>" +
-                "<br><br>" +
-                "Link 15 dəqiqə ərzində etibarlıdır. Əgər siz bu sorğunu göndərməmisinizsə, bu emaili yox sayın.";
+        String htmlBody =
+                "Please click the link to reset your password: "
+                        + "<a href='" + link + "'>Reset Password</a>"
+                        + "<br><br>"
+                        + "Link 15 dəqiqə ərzində etibarlıdır.";
 
         send(to, "Password Reset", htmlBody);
     }
 
     private void send(String to, String subject, String htmlBody) {
-        var requestBody = new EmailRequest(
-                "onboarding@resend.dev",
+        EmailRequest requestBody = new EmailRequest(
+                resendFrom,
                 List.of(to),
                 subject,
                 htmlBody
@@ -61,7 +66,7 @@ public class EmailServiceImpl implements EmailService {
 
         restClient.post()
                 .uri("/emails")
-                .header("Authorization", "Bearer " + resendApiKey)
+                .header("Authorization", "Bearer " + resendApiKey.trim())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .retrieve()

@@ -14,10 +14,6 @@ import lombok.experimental.FieldDefaults;
 @Schema(description = "Login request DTO")
 public class LoginRequest {
 
-    @Schema(description = "The username of the user",example = "mustafa_qasimov")
-    @NotBlank(message = "Username cannot be blank")
-    String userName;
-
     @Schema(description = "The password of the user",example = "password123")
     @NotBlank(message = "Password cannot be blank")
     String password;

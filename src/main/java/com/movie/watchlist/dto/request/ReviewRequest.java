@@ -19,9 +19,11 @@ public class ReviewRequest {
     @NotNull(message = "Rating is required")
     @DecimalMin(value = "0.0", message = "Rating must be at least 0.0")
     @DecimalMax(value = "5.0", message = "Rating cannot exceed 5.0")
+    @Schema(description = "Rating for the review", example = "4.5")
     Double rating;
 
     @NotBlank(message = "Review content is required")
+    @Schema(description = "Content of the review", example = "Great movie!")
     String content;
 
 }

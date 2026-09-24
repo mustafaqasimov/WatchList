@@ -1,0 +1,118 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-watchlists-and-items
+      author: mustafaqasimov
+      changes:
+        - createTable:
+            tableName: watchlists
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: active
+                  type: VARCHAR(10)
+                  defaultValue: 'ACTIVE'
+                  constraints:
+                    nullable: false
+        # Bir istifadəçi eyni adlı iki siyahı yarada bilməsin
+        - addUniqueConstraint:
+            tableName: watchlists
+            columnNames: user_id, name
+            constraintName: uc_watchlist_user_name
+        - addForeignKeyConstraint:
+            baseTableName: watchlists
+            baseColumnNames: user_id
+            constraintName: fk_watchlists_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            tableName: watchlist_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: watchlist_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: movie_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: watch_status
+                  type: VARCHAR(20)
+                  defaultValue: 'PLAN_TO_WATCH'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: priority
+                  type: VARCHAR(20)
+                  defaultValue: 'MEDIUM'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: active
+                  type: VARCHAR(10)
+                  defaultValue: 'ACTIVE'
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: watchlist_items
+            columnNames: watchlist_id, movie_id
+            constraintName: uc_watchlist_item_movie
+        - addForeignKeyConstraint:
+            baseTableName: watchlist_items
+            baseColumnNames: watchlist_id
+            constraintName: fk_items_watchlist_id
+            referencedTableName: watchlists
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: watchlist_items
+            baseColumnNames: movie_id
+            constraintName: fk_items_movie_id
+            referencedTableName: movies
+            referencedColumnNames: id
+            onDelete: CASCADE

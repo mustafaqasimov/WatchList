@@ -21,4 +21,6 @@ databaseChangeLog:
         file: db/changelog/changes/010-add-avatar-to-users.yaml
     - include:
         file: db/changelog/changes/011-create-reviews-table.yaml
+    - include:
+          file: db/changelog/changes/012-create-watchlists-and-items.yaml
 

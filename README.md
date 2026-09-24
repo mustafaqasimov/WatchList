@@ -2,8 +2,6 @@
 
 A Spring Boot backend for a movie watchlist application. Users can search movies via TMDB, verify their email, manage their profile and avatar, and maintain a personal favorites list. Movies imported from TMDB are cached in a local database and in Redis to minimize external API calls.
 
-**This is a private, proprietary project. All rights reserved. Not licensed for public use, redistribution, or contribution.**
-
 ---
 
 ## Tech Stack

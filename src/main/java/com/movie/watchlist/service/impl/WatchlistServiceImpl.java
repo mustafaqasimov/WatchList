@@ -9,6 +9,7 @@ import com.movie.watchlist.entity.entities.Movie;
 import com.movie.watchlist.entity.entities.User;
 import com.movie.watchlist.entity.entities.Watchlist;
 import com.movie.watchlist.entity.entities.WatchlistItem;
+import com.movie.watchlist.enums.ActiveStatus;
 import com.movie.watchlist.enums.Priority;
 import com.movie.watchlist.enums.WatchStatus;
 import com.movie.watchlist.exception.error.InvalidOperationException;
@@ -44,7 +45,7 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     @Transactional
     public WatchlistResponse createWatchlist(Long userId, WatchlistRequest request) {
-        if (watchlistRepository.existsByUserIdAndName(userId, request.getName())) {
+        if (watchlistRepository.existsByUserIdAndNameAndActiveStatus(userId, request.getName(), ActiveStatus.ACTIVE)) {
             throw new InvalidOperationException("This name is already in use");
         }
 
@@ -61,7 +62,7 @@ public class WatchlistServiceImpl implements WatchlistService {
 
     @Override
     public List<WatchlistResponse> getUserWatchlists(Long userId) {
-        return watchlistRepository.findByUserId(userId).stream()
+        return watchlistRepository.findByUserIdAndActiveStatus(userId, ActiveStatus.ACTIVE).stream()
                 .map(watchlistMapper::toWatchlistResponse)
                 .collect(Collectors.toList());
     }
@@ -69,20 +70,20 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     @Transactional
     public void deleteWatchlist(Long userId, Long watchlistId) {
-        Watchlist watchlist = watchlistRepository.findByIdAndUserId(watchlistId, userId)
+        Watchlist watchlist = watchlistRepository.findByIdAndUserIdAndActiveStatus(watchlistId, userId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Watchlist not found or you are not the owner"));
 
-        watchlistRepository.delete(watchlist);
+        watchlist.setActiveStatus(ActiveStatus.INACTIVE);
         log.info("Watchlist deleted. Watchlist ID: {}", watchlistId);
     }
 
     @Override
     @Transactional
     public WatchlistItemResponse addMovieToWatchlist(Long userId, Long watchlistId, WatchlistItemRequest request) {
-        Watchlist watchlist = watchlistRepository.findByIdAndUserId(watchlistId, userId)
+        Watchlist watchlist = watchlistRepository.findByIdAndUserIdAndActiveStatus(watchlistId, userId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Watchlist not found or you are not the owner"));
 
-        if (watchlistItemRepository.existsByWatchlistIdAndMovieId(watchlistId, request.getMovieId())) {
+        if (watchlistItemRepository.existsByWatchlistIdAndMovieIdAndActiveStatus(watchlistId, request.getMovieId(), ActiveStatus.ACTIVE)) {
             throw new InvalidOperationException("This movie is already in the watchlist");
         }
 
@@ -104,10 +105,10 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     @Transactional
     public WatchlistItemResponse updateMovieStatus(Long userId, Long watchlistId, Long movieId, WatchlistUpdateRequest request) {
-        watchlistRepository.findByIdAndUserId(watchlistId, userId)
+        watchlistRepository.findByIdAndUserIdAndActiveStatus(watchlistId, userId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Watchlist not found or you are not the owner"));
 
-        WatchlistItem item = watchlistItemRepository.findByWatchlistIdAndMovieId(watchlistId, movieId)
+        WatchlistItem item = watchlistItemRepository.findByWatchlistIdAndMovieIdAndActiveStatus(watchlistId, movieId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found in the watchlist"));
 
         watchlistMapper.updateItemFromRequest(request, item);
@@ -118,24 +119,24 @@ public class WatchlistServiceImpl implements WatchlistService {
 
     @Override
     public Page<WatchlistItemResponse> getWatchlistItems(Long userId, Long watchlistId, int page, int size) {
-        watchlistRepository.findByIdAndUserId(watchlistId, userId)
+        watchlistRepository.findByIdAndUserIdAndActiveStatus(watchlistId, userId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Watchlist not found or you are not the owner"));
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return watchlistItemRepository.findByWatchlistId(watchlistId, pageRequest)
+        return watchlistItemRepository.findByWatchlistIdAndActiveStatus(watchlistId, ActiveStatus.ACTIVE, pageRequest)
                 .map(watchlistMapper::toItemResponse);
     }
 
     @Override
     @Transactional
     public void removeMovieFromWatchlist(Long userId, Long watchlistId, Long movieId) {
-        watchlistRepository.findByIdAndUserId(watchlistId, userId)
+        watchlistRepository.findByIdAndUserIdAndActiveStatus(watchlistId, userId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Watchlist not found or you are not the owner"));
 
-        WatchlistItem item = watchlistItemRepository.findByWatchlistIdAndMovieId(watchlistId, movieId)
+        WatchlistItem item = watchlistItemRepository.findByWatchlistIdAndMovieIdAndActiveStatus(watchlistId, movieId, ActiveStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found in the watchlist"));
 
-        watchlistItemRepository.delete(item);
+        item.setActiveStatus(ActiveStatus.INACTIVE);
         log.info("Movie removed from watchlist. Movie ID: {}, Watchlist ID: {}", movieId, watchlistId);
     }
 }

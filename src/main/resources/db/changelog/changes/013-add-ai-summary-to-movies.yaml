@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 05-add-ai-summary-to-movies
+      author: mustafaqasimov
+      changes:
+        - addColumn:
+            tableName: movies
+            columns:
+              - column:
+                  name: ai_summary
+                  type: TEXT
+              - column:
+                  name: ai_summary_generated_at
+                  type: TIMESTAMP

@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -46,4 +47,10 @@ public class Movie extends BaseEntity {
 
     @Column(name = "popular")
     boolean popular;
+
+    @Column(name = "ai_summary", columnDefinition = "TEXT")
+    String aiSummary;
+
+    @Column(name = "ai_summary_generated_at")
+    Instant aiSummaryGeneratedAt;
 }

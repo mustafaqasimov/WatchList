@@ -1,5 +1,6 @@
 package com.movie.watchlist.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.movie.watchlist.repositories.UserRepository;
 import com.movie.watchlist.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -47,5 +48,10 @@ public class ApplicationConfig {
 
     @Bean public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }

@@ -1,6 +1,7 @@
 package com.movie.watchlist.controller;
 
 import com.movie.watchlist.dto.response.MovieResponse;
+import com.movie.watchlist.service.impl.MovieSummaryService;
 import com.movie.watchlist.service.interfaces.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +15,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class MovieController {
 
     private final MovieService movieService;
+    private final MovieSummaryService movieSummaryService;
 
     @Operation(summary = "Get movie by ID", description = "Retrieves a movie by its ID")
     @ApiResponses(value = {
@@ -50,5 +54,14 @@ public class MovieController {
     public ResponseEntity<Object> getMovieVideos(@PathVariable Long id) {
         Object videos = movieService.getMovieVideos(id);
         return ResponseEntity.ok(videos);
+    }
+
+    @Operation(summary = "Get why watch information", description = "Retrieves information on why to watch a movie")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Why watch information retrieved successfully")
+    })
+    @GetMapping("/{id}/why-watch")
+    public ResponseEntity<List<String>> whyWatch(@PathVariable Long id) {
+        return ResponseEntity.ok(movieSummaryService.getWhyWatch(id));
     }
 }

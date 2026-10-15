@@ -18,7 +18,7 @@ public class GeminiClientConfig {
 
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(5));
-        factory.setReadTimeout(Duration.ofSeconds(20));
+        factory.setReadTimeout(Duration.ofSeconds(60));
 
         return RestClient.builder()
                 .baseUrl(baseUrl)
